@@ -926,7 +926,7 @@ header.main-header .header-sticky.active{
 /************************************/
 
 .our-service{
-	background: var(--secondary-color) url("../images/our-service-bg.png") no-repeat;
+	background: var(--secondary-color) url("https://html.awaikenthemes.com/builtup/images/our-service-bg.png") no-repeat;
     background-position: right top;
     background-size: auto;
 	padding: 100px 0 70px;
