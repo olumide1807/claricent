@@ -23,8 +23,9 @@
 			var fromTop = $(window).scrollTop();
 			setHeaderHeight();
 			var headerHeight = $('header .header-sticky').outerHeight()
-			$("header .header-sticky").toggleClass("hide", (fromTop > headerHeight + 100));
-			$("header .header-sticky").toggleClass("active", (fromTop > 600));
+			// $("header .header-sticky").toggleClass("hide", (fromTop > headerHeight + 100));
+			$("header .header-sticky .navbar-expand-lg").toggleClass("active", (fromTop > 100));
+			$("header .main-header").toggleClass("active", (fromTop > 100));
 		});
 	}
 	
