@@ -1588,7 +1588,7 @@ header.main-header.active {
 /************************************/
 
 .contact-us{
-	background: var(--secondary-color) url("../images/contact-us-bg.png") no-repeat;
+	background: var(--secondary-color) url("https://html.awaikenthemes.com/builtup/images/contact-us-bg.png") no-repeat;
 	background-position: center center;
 	background-size: cover;
 	padding: 100px 0;
@@ -1814,14 +1814,14 @@ header.main-header.active {
 /************************************/
 
 .page-header{
-	margin: 0 40px;
+	margin: 0 0px;
 	overflow: hidden;
 	border-radius: 40px;
-	background: url('../images/page-header-bg.jpg') no-repeat center center;
+	background: url('https://html.awaikenthemes.com/builtup/images/page-header-bg.jpg') no-repeat center center;
 	background-size: cover;
 	padding: 220px 0 120px;
 	position: relative;
-	margin-top: -103px;
+	margin-top: -90px;
 }
 
 .page-header:before{
@@ -3414,7 +3414,7 @@ header.main-header.active {
 
 	.hero.bg-section{
 		margin: 0 0px;
-		margin-top: -103px;
+		margin-top: -30px;
 		padding: 200px 0 100px;
 		border-radius: 0;
 	}
@@ -3681,7 +3681,7 @@ header.main-header.active {
 		margin: 0 0;
 		border-radius: 0;
 		padding: 170px 0 80px;
-		margin-top: -90px;
+		margin-top: -30px;
 	}
 
 	.page-header:before{
@@ -3704,6 +3704,10 @@ header.main-header.active {
 	.about-us-image{
 		text-align: center;
 		margin-bottom: 30px;
+	}
+
+	.about-us-img{
+		border-radius: 40px;
 	}
 
 	.about-us-content{
