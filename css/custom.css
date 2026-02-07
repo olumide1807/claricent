@@ -1940,15 +1940,15 @@ header.main-header.active {
 }
 
 .about-us-contact-support .icon-box{
-	margin-right: 20px;
+	margin-right: 60px;
 }
 
 .about-us-contact-support .icon-box img{
-	max-width: 40px;
+	max-width: 60px;
 }
 
 .about-us-support-content{
-	width: calc(100% - 60px);
+	width: calc(100% - 20px);
 }
 
 .about-us-support-content p{
