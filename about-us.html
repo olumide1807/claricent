@@ -14,7 +14,6 @@
     <title>Claricent Company Limited - Best Construction Company in Ghana</title>
     <!-- Favicon Icon -->
     <link rel="shortcut icon" type="image/x-icon" href="images/CLARICENT_COMPANY_LIMITED_LOADER.png">
-    <!-- Google Fonts Css-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -36,6 +35,10 @@
     <link rel="stylesheet" href="css/mousecursor.css">
     <!-- Custom CSS (Local) -->
     <link href="css/custom.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 
 <body>
@@ -75,9 +78,10 @@
                                 </li>
                                 <li class="nav-item"><a class="nav-link" href="about-us.html">About Us</a></li>
                                 <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                                <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
                                 <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
-                                <li class="nav-item submenu"><a class="nav-link" href="#">Pages</a>
-                                    <!-- <ul>
+                                <!-- <li class="nav-item submenu"><a class="nav-link" href="#">Pages</a>
+                                    <ul>
                                         <li class="nav-item"><a class="nav-link" href="service-single.html">Service
                                                 Details</a></li>
                                         <li class="nav-item"><a class="nav-link" href="blog-single.html">Blog
@@ -88,8 +92,8 @@
                                         <li class="nav-item"><a class="nav-link" href="team.html">Our Team</a></li>
                                         <li class="nav-item"><a class="nav-link" href="faqs.html">FAQ</a></li>
                                         <li class="nav-item"><a class="nav-link" href="404.html">404</a></li>
-                                    </ul> -->
-                                </li>
+                                    </ul>
+                                </li> -->
                                 <li class="nav-item highlighted-menu"><a class="nav-link" href="contact.html">Contact
                                         Us</a></li>
                             </ul>
@@ -170,8 +174,10 @@
                                 <li>Engineering Solutions (Civil, structural, etc.)</li>
                                 <li>Project Management (Infrastructure Projects)</li>
                                 <li>Consultancy Services (Structural Integrity Assessment, Soil Test)</li>
-                                <li>Design & Build / Planning (designing of building plans, structural detailing, etc)</li>
-                                <li>Construction Maintenance & Rehabilitation (Renovations, Transforming existing spaces)</li>
+                                <li>Design & Build / Planning (designing of building plans, structural detailing, etc)
+                                </li>
+                                <li>Construction Maintenance & Rehabilitation (Renovations, Transforming existing
+                                    spaces)</li>
                             </ul>
                         </div>
                         <!-- About Content Body End -->
@@ -491,7 +497,8 @@
                         <!-- Team Image Start -->
                         <div class="team-image">
                             <figure class="image-anime">
-                                <img src="images/claricent-bg-6.jpeg" alt="">
+                                <img src="images/Engr_Quayson_Claricent_Company.jpeg"
+                                    alt="Engr. Dr. Jeriscot Henry Quayson">
                             </figure>
                         </div>
                         <!-- Team Image End -->
@@ -561,7 +568,7 @@
                         <!-- Team Image Start -->
                         <div class="team-image">
                             <figure class="image-anime">
-                                <img src="https://html.awaikenthemes.com/builtup/images/team-3.jpg" alt="">
+                                <img src="images/Engr_Emmanuel-Morgue-Claricent_Company.jpeg" alt="">
                             </figure>
                         </div>
                         <!-- Team Image End -->
@@ -646,7 +653,7 @@
                         </div>
                         <!-- Section Title End -->
 
-                        <form id="contactForm" action="#" method="POST" data-toggle="validator">
+                        <form id="contactForm" action="form-process.php" method="POST" data-toggle="validator">
                             <div class="row">
                                 <div class="form-group col-md-6 mb-4">
                                     <input type="text" name="name" class="form-control" id="name"
@@ -667,7 +674,7 @@
                                 </div>
 
                                 <div class="form-group col-md-6 mb-4">
-                                    <input type="text" name="website" class="form-control" id="website"
+                                    <input type="text" name="subject" class="form-control" id="subject"
                                         placeholder="Subject" required="">
                                     <div class="help-block with-errors"></div>
                                 </div>
@@ -679,7 +686,19 @@
                                 </div>
 
                                 <div class="col-md-12">
-                                    <button type="submit" class="btn-default">submit</button>
+                                    <div class="contact-form-buttons">
+                                        <button type="submit" id="emailBtn" class="btn btn-primary">
+                                            <span id="btnText">
+                                                <i class="fa fa-envelope"></i> Send Via Email
+                                            </span>
+                                            <span id="btnLoader" style="display:none;">
+                                                <i class="fa fa-spinner fa-spin"></i> Sending...
+                                            </span>
+                                        </button>
+                                        <button type="button" class="btn-default btn-whatsapp" id="whatsappBtn">
+                                            <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
+                                        </button>
+                                    </div>
                                     <div id="msgSubmit" class="h3 hidden"></div>
                                 </div>
                             </div>
@@ -723,12 +742,12 @@
                     <div class="footer-links">
                         <h3>our services</h3>
                         <ul>
-                            <li><a href="#">Construction Services</a></li>
-                            <li><a href="#">Engineering Solutions</a></li>
-                            <li><a href="#">Project Management</a></li>
-                            <li><a href="#">Design & Build / Planning</a></li>
-                            <li><a href="#">Construction Maintenance & Rehabilitation</a></li>
-                            <li><a href="#">Consultancy Services</a></li>
+                            <li><a href="services.html#construction">Construction Services</a></li>
+                            <li><a href="services.html#engineering">Engineering Solutions</a></li>
+                            <li><a href="services.html#management">Project Management</a></li>
+                            <li><a href="services.html#design">Design & Build / Planning</a></li>
+                            <li><a href="services.html#maintenance">Construction Maintenance & Rehabilitation</a></li>
+                            <li><a href="services.html#consultancy">Consultancy Services</a></li>
                         </ul>
                     </div>
                     <!-- Footer Quick Links End -->
@@ -739,11 +758,11 @@
                     <div class="footer-links">
                         <h3>company</h3>
                         <ul>
-                            <li><a href="#">about us</a></li>
-                            <li><a href="#">services</a></li>
+                            <li><a href="about-us.html">about us</a></li>
+                            <li><a href="services.html">services</a></li>
                             <li><a href="#">blog</a></li>
                             <li><a href="#">faqs</a></li>
-                            <li><a href="#">contact us</a></li>
+                            <li><a href="contact.html">contact us</a></li>
                         </ul>
                     </div>
                     <!-- Footer Links End -->
@@ -757,7 +776,7 @@
                         <div class="footer-info-box">
                             <!-- Icon Box Start -->
                             <div class="icon-box">
-                                <img src="images/icon-phone.svg" alt="">
+                                <img src="https://html.awaikenthemes.com/builtup/images/icon-phone.svg" alt="">
                             </div>
                             <!-- Icon Box End -->
                             <p>+233 243368425, <br>+233 500153340, <br>+233 209128276</p>
@@ -768,7 +787,7 @@
                         <div class="footer-info-box">
                             <!-- Icon Box Start -->
                             <div class="icon-box">
-                                <img src="images/icon-mail.svg" alt="">
+                                <img src="https://html.awaikenthemes.com/builtup/images/icon-mail.svg" alt="">
                             </div>
                             <!-- Icon Box End -->
                             <p>info@claricentgroup.com</p>
@@ -779,7 +798,7 @@
                         <div class="footer-info-box">
                             <!-- Icon Box Start -->
                             <div class="icon-box">
-                                <img src="images/icon-location.svg" alt="">
+                                <img src="https://html.awaikenthemes.com/builtup/images/icon-location.svg" alt="">
                             </div>
                             <!-- Icon Box End -->
                             <p>P.O. Box 1075, Cape Coast</p>
@@ -805,11 +824,14 @@
                         <!-- Footer Social Link Start -->
                         <div class="footer-social-links">
                             <ul>
-                                <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
-                                <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-                                <li><a href="#"><i class="fa-brands fa-x-twitter"></i></a></li>
-                                <li><a href="#"><i class="fa-brands fa-github"></i></a></li>
-                                <li><a href="#"><i class="fa-brands fa-linkedin-in"></i></a></li>
+                                <li><a href="https://www.instagram.com/jeriscot/"><i
+                                            class="fa-brands fa-instagram"></i></a></li>
+                                <li><a href="https://www.facebook.com/jeriscot/"><i
+                                            class="fa-brands fa-facebook-f"></i></a></li>
+                                <li><a href="https://x.com/EngrQuay"><i class="fa-brands fa-x-twitter"></i></a></li>
+                                <!-- <li><a href="#"><i class="fa-brands fa-github"></i></a></li> -->
+                                <li><a href="https://www.linkedin.com/in/jeriscot-claricent-7090773a9/"><i
+                                            class="fa-brands fa-linkedin-in"></i></a></li>
                             </ul>
                         </div>
                         <!-- Footer Social Link End -->
@@ -822,6 +844,7 @@
     <!-- Footer End -->
 
     <!-- Jquery Library File -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -845,10 +868,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <!-- Local / Custom -->
     <script src="js/magiccursor.js"></script>
     <script src="js/SplitText.js"></script>
     <script src="js/function.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://demo.awaikenthemes.com/assets/js/theme-panel.js"></script>
 </body>
 

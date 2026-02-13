@@ -1,25 +1,25 @@
 (function ($) {
-    "use strict";
-	
-	var $window = $(window); 
-	var $body = $('body'); 
+	"use strict";
+
+	var $window = $(window);
+	var $body = $('body');
 
 	/* Preloader Effect */
-	$window.on('load', function(){
+	$window.on('load', function () {
 		$(".preloader").fadeOut(600);
 	});
 
-	/* Sticky Header */	
-	if($('.active-sticky-header').length){
-		$window.on('resize', function(){
+	/* Sticky Header */
+	if ($('.active-sticky-header').length) {
+		$window.on('resize', function () {
 			setHeaderHeight();
 		});
 
-		function setHeaderHeight(){
-	 		$("header.main-header").css("height", $('header .header-sticky').outerHeight());
-		}	
-	
-		$(window).on("scroll", function() {
+		function setHeaderHeight() {
+			$("header.main-header").css("height", $('header .header-sticky').outerHeight());
+		}
+
+		$(window).on("scroll", function () {
 			var fromTop = $(window).scrollTop();
 			setHeaderHeight();
 			var headerHeight = $('header .header-sticky').outerHeight()
@@ -28,17 +28,23 @@
 			$("header .main-header").toggleClass("active", (fromTop > 100));
 		});
 	}
-	
-	
+
+
 	/* Slick Menu JS */
-	$('#menu').slicknav({
-		label : '',
-		prependTo : '.responsive-menu'
-	});
+	try {
+		if ($.fn.slicknav) {
+			$('#menu').slicknav({
+				label: '',
+				prependTo: '.responsive-menu'
+			});
+		}
+	} catch (e) {
+		console.log('SlickNav not available:', e);
+	}
 
 
-	if($("a[href='#top']").length){
-		$("a[href='#top']").click(function() {
+	if ($("a[href='#top']").length) {
+		$("a[href='#top']").click(function () {
 			$("html, body").animate({ scrollTop: 0 }, "slow");
 			return false;
 		});
@@ -46,7 +52,7 @@
 
 	/* Hero Slider Layout JS */
 	const hero_slider_layout = new Swiper('.hero-slider-layout .swiper', {
-		slidesPerView : 1,
+		slidesPerView: 1,
 		speed: 1000,
 		spaceBetween: 0,
 		loop: true,
@@ -59,35 +65,47 @@
 		},
 	});
 
-	/* testimonial Slider JS */
-	if ($('.testimonial-slider').length) {
-		const testimonial_slider = new Swiper('.testimonial-slider .swiper', {
-			slidesPerView : 1,
-			speed: 1000,
-			spaceBetween: 30,
-			loop: true,
-			autoplay: {
-				delay: 3000,
-			},
-			pagination: {
-				el: '.swiper-pagination',
-				clickable: true,
-			},
-			breakpoints: {
-				768:{
-				  	slidesPerView: 2,
-				},
-				991:{
-				  	slidesPerView: 3,
-				}
+	/* testimonial Slider JS - FIXED VERSION */
+	// Wait for DOM and Swiper to be ready
+	setTimeout(function () {
+		if ($('.testimonial-slider .swiper').length && typeof Swiper !== 'undefined') {
+			try {
+				const testimonial_slider = new Swiper('.testimonial-slider .swiper', {
+					slidesPerView: 1,
+					speed: 1000,
+					spaceBetween: 30,
+					loop: true,
+					autoplay: {
+						delay: 3000,
+						disableOnInteraction: false,
+					},
+					pagination: {
+						el: '.testimonial-slider .swiper-pagination',
+						clickable: true,
+					},
+					breakpoints: {
+						768: {
+							slidesPerView: 2,
+						},
+						991: {
+							slidesPerView: 3,
+						}
+					}
+				});
+				console.log('Testimonial slider initialized successfully');
+			} catch (e) {
+				console.error('Error initializing testimonial slider:', e);
 			}
-		});
-	}
+		} else {
+			console.log('Testimonial slider element or Swiper not found');
+		}
+	}, 100);
+
 
 	/* Services Single Image Carousel JS */
 	if ($('.service-images-slider').length) {
 		const property_photos_carousel = new Swiper('.service-images-slider .swiper', {
-			slidesPerView : 1,
+			slidesPerView: 1,
 			speed: 1000,
 			spaceBetween: 10,
 			loop: true,
@@ -109,77 +127,77 @@
 
 	/* Image Reveal Animation */
 	if ($('.reveal').length) {
-        gsap.registerPlugin(ScrollTrigger);
-        let revealContainers = document.querySelectorAll(".reveal");
-        revealContainers.forEach((container) => {
-            let image = container.querySelector("img");
-            let tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: container,
-                    toggleActions: "play none none none"
-                }
-            });
-            tl.set(container, {
-                autoAlpha: 1
-            });
-            tl.from(container, 1, {
-                xPercent: -100,
-                ease: Power2.out
-            });
-            tl.from(image, 1, {
-                xPercent: 100,
-                scale: 1,
-                delay: -1,
-                ease: Power2.out
-            });
-        });
-    }
+		gsap.registerPlugin(ScrollTrigger);
+		let revealContainers = document.querySelectorAll(".reveal");
+		revealContainers.forEach((container) => {
+			let image = container.querySelector("img");
+			let tl = gsap.timeline({
+				scrollTrigger: {
+					trigger: container,
+					toggleActions: "play none none none"
+				}
+			});
+			tl.set(container, {
+				autoAlpha: 1
+			});
+			tl.from(container, 1, {
+				xPercent: -100,
+				ease: Power2.out
+			});
+			tl.from(image, 1, {
+				xPercent: 100,
+				scale: 1,
+				delay: -1,
+				ease: Power2.out
+			});
+		});
+	}
 
 	/* Text Effect Animation */
 	if ($('.text-anime-style-1').length) {
-		let staggerAmount 	= 0.05,
+		let staggerAmount = 0.05,
 			translateXValue = 0,
-			delayValue 		= 0.5,
-		   animatedTextElements = document.querySelectorAll('.text-anime-style-1');
-		
+			delayValue = 0.5,
+			animatedTextElements = document.querySelectorAll('.text-anime-style-1');
+
 		animatedTextElements.forEach((element) => {
 			let animationSplitText = new SplitText(element, { type: "chars, words" });
-				gsap.from(animationSplitText.words, {
+			gsap.from(animationSplitText.words, {
 				duration: 1,
 				delay: delayValue,
 				x: 20,
 				autoAlpha: 0,
 				stagger: staggerAmount,
 				scrollTrigger: { trigger: element, start: "top 85%" },
-				});
-		});		
+			});
+		});
 	}
-	
-	if ($('.text-anime-style-2').length) {				
-		let	 staggerAmount 		= 0.05,
-			 translateXValue	= 20,
-			 delayValue 		= 0.5,
-			 easeType 			= "power2.out",
-			 animatedTextElements = document.querySelectorAll('.text-anime-style-2');
-		
+
+	if ($('.text-anime-style-2').length) {
+		let staggerAmount = 0.05,
+			translateXValue = 20,
+			delayValue = 0.5,
+			easeType = "power2.out",
+			animatedTextElements = document.querySelectorAll('.text-anime-style-2');
+
 		animatedTextElements.forEach((element) => {
 			let animationSplitText = new SplitText(element, { type: "chars, words" });
-				gsap.from(animationSplitText.chars, {
-					duration: 1,
-					delay: delayValue,
-					x: translateXValue,
-					autoAlpha: 0,
-					stagger: staggerAmount,
-					ease: easeType,
-					scrollTrigger: { trigger: element, start: "top 85%"},
-				});
-		});		
+			gsap.from(animationSplitText.chars, {
+				duration: 1,
+				delay: delayValue,
+				x: translateXValue,
+				autoAlpha: 0,
+				stagger: staggerAmount,
+				ease: easeType,
+				scrollTrigger: { trigger: element, start: "top 85%" },
+			});
+		});
 	}
-	
-	if ($('.text-anime-style-3').length) {		
-		let	animatedTextElements = document.querySelectorAll('.text-anime-style-3');
-		
-		 animatedTextElements.forEach((element) => {
+
+	if ($('.text-anime-style-3').length) {
+		let animatedTextElements = document.querySelectorAll('.text-anime-style-3');
+
+		animatedTextElements.forEach((element) => {
 			//Reset if needed
 			if (element.animation) {
 				element.animation.progress(1).kill();
@@ -198,7 +216,7 @@
 			});
 
 			element.animation = gsap.to(element.split.chars, {
-				scrollTrigger: { trigger: element,	start: "top 90%" },
+				scrollTrigger: { trigger: element, start: "top 90%" },
 				x: "0",
 				y: "0",
 				rotateX: "0",
@@ -207,18 +225,19 @@
 				ease: Back.easeOut,
 				stagger: 0.02,
 			});
-		});		
+		});
 	}
 
 	/* Parallaxie js */
 	var $parallaxie = $('.parallaxie');
-	if($parallaxie.length && ($window.width() > 991))
-	{
+	if ($parallaxie.length && ($window.width() > 991)) {
 		if ($window.width() > 768) {
-			$parallaxie.parallaxie({
-				speed: 0.55,
-				offset: 0,
-			});
+			if (typeof $.fn.parallaxie === 'function') {
+				$parallaxie.parallaxie({
+					speed: 0.55,
+					offset: 0,
+				});
+			}
 		}
 	}
 
@@ -238,60 +257,136 @@
 		zoom: {
 			enabled: true,
 			duration: 300, // don't foget to change the duration also in CSS
-			opener: function(element) {
-			  return element.find('img');
+			opener: function (element) {
+				return element.find('img');
 			}
 		}
 	});
 
 	/* Contact form validation */
 	var $contactform = $("#contactForm");
-	$contactform.validator({focus: false}).on("submit", function (event) {
-		if (!event.isDefaultPrevented()) {
-			event.preventDefault();
-			submitForm();
-		}
-	});
+	if ($contactform.length && typeof $.fn.validator === 'function') {
+		$contactform.validator({ focus: false }).on("submit", function (event) {
+			if (!event.isDefaultPrevented()) {
+				event.preventDefault();
+				submitForm();
+			}
+		});
+	}
 
-	function submitForm(){
-		/* Initiate Variables With Form Content*/
-		var fullname = $("#fullname").val();
+	/* WhatsApp Button Handler */
+	$('#whatsappBtn').on('click', function () {
+		// Get form values
+		var name = $("#name").val();
 		var email = $("#email").val();
 		var phone = $("#phone").val();
 		var subject = $("#subject").val();
 		var message = $("#msg").val();
 
+		// Check if form is valid
+		if (!name || !email || !phone || !subject || !message) {
+			submitMSG(false, "Please fill in all fields!");
+			return;
+		}
+
+		// Format WhatsApp message
+		var whatsappMessage = `*New Contact Form Submission From Claricent Website*\n\n`;
+		whatsappMessage += `*Name:* ${name}\n`;
+		whatsappMessage += `*Email:* ${email}\n`;
+		whatsappMessage += `*Phone:* ${phone}\n`;
+		whatsappMessage += `*Subject:* ${subject}\n\n`;
+		whatsappMessage += `*Message:*\n${message}`;
+
+		// WhatsApp business number (replace with your actual number)
+		// Format: country code + number (no + or spaces)
+		// Example: For Ghana +233 243368425, use: 233243368425
+		var whatsappNumber = "2347051927036"; // Update this with your WhatsApp number
+
+		// Encode message for URL
+		var encodedMessage = encodeURIComponent(whatsappMessage);
+
+		// Create WhatsApp URL
+		var whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+		// Open WhatsApp in new tab
+		window.open(whatsappURL, '_blank');
+
+		// Show success message
+		submitMSG(true, "Redirecting to WhatsApp...");
+
+		// Optional: Reset form after 2 seconds
+		setTimeout(function () {
+			$contactform[0].reset();
+			$("#msgSubmit").fadeOut();
+		}, 2000);
+	});
+
+	function submitForm() {
+		/* Initiate Variables With Form Content*/
+		var fullname = $("#name").val();
+		var email = $("#email").val();
+		var phone = $("#phone").val();
+		var subject = $("#subject").val();
+		var message = $("#msg").val();
+
+		let button = $("#emailBtn");
+
+		// Show loader
+		$("#btnText").hide();
+		$("#btnLoader").show();
+		button.prop("disabled", true);
+
 		$.ajax({
 			type: "POST",
 			url: "form-process.php",
-			data: "fullname=" + fullname + "&name=" + "&email=" + email + "&phone=" + phone + "&subject=" + subject + "&message=" + message,
-			success : function(text){
-				if (text == "success"){
-					formSuccess();
+			data: "fullname=" + fullname + "&email=" + email + "&phone=" + phone + "&subject=" + subject + "&message=" + message,
+			success: function (text) {
+				// Reset button
+				$("#btnLoader").hide();
+				$("#btnText").show();
+				button.prop("disabled", false);
+
+				if (text == "success" || text.includes("success")) {
+					Swal.fire({
+						icon: 'success',
+						title: 'Message Sent!',
+						text: 'We will get back to you shortly.',
+					});
+					$contactform[0].reset();
 				} else {
-					submitMSG(false,text);
+					Swal.fire({
+						icon: 'error',
+						title: 'Oops...',
+						text: text || 'Something went wrong!',
+					});
 				}
+			},
+			error: function () {
+				$("#btnLoader").hide();
+				$("#btnText").show();
+				button.prop("disabled", false);
+
+				Swal.fire({
+					icon: 'error',
+					title: 'Server Error',
+					text: 'Please try again later.',
+				});
 			}
 		});
 	}
 
-	function formSuccess(){
-		$contactform[0].reset();
-		submitMSG(true, "Message Sent Successfully!")
-	}
-
-	function submitMSG(valid, msg){
-		if(valid){
+	function submitMSG(valid, msg) {
+		if (valid) {
 			var msgClasses = "h3 text-success";
 		} else {
 			var msgClasses = "h3 text-danger";
 		}
-		$("#msgSubmit").removeClass().addClass(msgClasses).text(msg);
+		$("#msgSubmit").removeClass().addClass(msgClasses).text(msg).fadeIn();
 	}
 	/* Contact form validation end */
 
 
-	/* Animated Wow Js */	
+	/* Animated Wow Js */
 	new WOW().init();
 
 	/* Popup Video */
@@ -304,5 +399,5 @@
 			fixedContentPos: true
 		});
 	}
-	
+
 })(jQuery);
