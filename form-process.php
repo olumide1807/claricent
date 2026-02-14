@@ -131,7 +131,7 @@ try {
     // ============================================
     
     $mail->isHTML(true);
-    $mail->Subject = "New Contact: $subject";
+    $mail->Subject = "New Contact Form Submission From Claricent Website: $subject";
     $mail->CharSet = 'UTF-8';
     
     // HTML Email Body

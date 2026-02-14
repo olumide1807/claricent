@@ -300,7 +300,7 @@
 		// WhatsApp business number (replace with your actual number)
 		// Format: country code + number (no + or spaces)
 		// Example: For Ghana +233 243368425, use: 233243368425
-		var whatsappNumber = "2347051927036"; // Update this with your WhatsApp number
+		var whatsappNumber = "233243368425"; // Update this with your WhatsApp number
 
 		// Encode message for URL
 		var encodedMessage = encodeURIComponent(whatsappMessage);
