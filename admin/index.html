@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claricent Admin — Project Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+        <div class="login-logo">
+            <div class="logo-mark">C</div>
+            <span>CLARICENT ADMIN</span>
+        </div>
+        <h2>Sign In</h2>
+        <p class="login-sub">Access the project management dashboard</p>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="loginUser" placeholder="Username" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <div class="pw-wrap">
+                <input type="password" id="loginPass" placeholder="••••••••">
+                <button class="toggle-pw" onclick="togglePw()"><i class="fa fa-eye" id="eyeIcon"></i></button>
+            </div>
+        </div>
+        <div class="login-error" id="loginError">Incorrect credentials. Try again.</div>
+        <button class="btn-login" onclick="doLogin()">
+            <span>Enter Dashboard</span>
+            <i class="fa fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- MAIN ADMIN LAYOUT -->
+<div class="admin-shell" id="adminShell" style="display:none;">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-mark">C</div>
+            <div>
+                <div class="logo-name">CLARICENT COMPANY LIMITED</div>
+                <div class="logo-sub">Admin Panel</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="projects" onclick="switchSection('projects',this)">
+                <i class="fa fa-building"></i>
+                <span>Projects</span>
+            </a>
+            <a href="#" class="nav-item" data-section="blog" onclick="switchSection('blog',this)">
+                <i class="fa fa-newspaper"></i>
+                <span>Blog</span>
+            </a>
+            <!-- <a href="#" class="nav-item disabled" title="Coming Soon">
+                <i class="fa fa-users"></i>
+                <span>Team</span>
+                <span class="badge">Soon</span>
+            </a>
+            <a href="#" class="nav-item disabled" title="Coming Soon">
+                <i class="fa fa-images"></i>
+                <span>Gallery</span>
+                <span class="badge">Soon</span>
+            </a> -->
+        </nav>
+        <div class="sidebar-footer">
+            <a href="../index.html" target="_blank" class="view-site-btn">
+                <i class="fa fa-external-link-alt"></i> View Site
+            </a>
+            <button class="logout-btn" onclick="doLogout()">
+                <i class="fa fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div id="projectsSection">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1>Project Manager</h1>
+                <span class="breadcrumb-trail">Admin / Projects</span>
+            </div>
+            <div class="topbar-right">
+                <div class="stats-pill">
+                    <i class="fa fa-building"></i>
+                    <span id="projectCount">0</span> projects
+                </div>
+                <button class="btn-outline" onclick="runDiagnose()" title="Check server setup">
+                    <i class="fa fa-stethoscope"></i> Diagnose
+                </button>
+                <button class="btn-primary" onclick="openModal()">
+                    <i class="fa fa-plus"></i> Add Project
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Zone -->
+        <div class="alert-zone" id="alertZone"></div>
+
+        <!-- Projects Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="search-wrap">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="searchProjects" placeholder="Search projects..." oninput="filterProjects()">
+                </div>
+                <div class="filter-group">
+                    <select id="categoryFilter" onchange="filterProjects()">
+                        <option value="">All Categories</option>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="infrastructure">Infrastructure</option>
+                        <option value="renovation">Renovation</option>
+                    </select>
+                    <select id="statusFilter" onchange="filterProjects()">
+                        <option value="">All Status</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="upcoming">Upcoming</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="projects-table">
+                    <thead>
+                        <tr>
+                            <th width="60">Image</th>
+                            <th>Project Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Year</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <tr class="empty-row">
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fa fa-hard-hat"></i>
+                                    <p>No projects yet. Click <strong>Add Project</strong> to get started.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        </div><!-- /projectsSection -->
+
+        <!-- ═══════════ BLOG SECTION ═══════════ -->
+        <div id="blogSection" style="display:none;">
+
+            <!-- Top Bar (Blog) -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h1>Blog Manager</h1>
+                    <span class="breadcrumb-trail">Admin / Blog</span>
+                </div>
+                <div class="topbar-right">
+                    <div class="stats-pill">
+                        <i class="fa fa-newspaper"></i>
+                        <span id="postCount">0</span> posts
+                    </div>
+                    <button class="btn-primary" onclick="openPostModal()">
+                        <i class="fa fa-plus"></i> New Post
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alert Zone (Blog) -->
+            <div class="alert-zone" id="blogAlertZone"></div>
+
+            <!-- Posts Table -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="search-wrap">
+                        <i class="fa fa-search"></i>
+                        <input type="text" id="searchPosts" placeholder="Search posts..." oninput="filterPosts()">
+                    </div>
+                    <div class="filter-group">
+                        <select id="postCategoryFilter" onchange="filterPosts()">
+                            <option value="">All Categories</option>
+                            <option value="construction">Construction</option>
+                            <option value="design">Design</option>
+                            <option value="renovation">Renovation</option>
+                            <option value="technology">Technology</option>
+                            <option value="tips">Tips & Advice</option>
+                            <option value="news">News</option>
+                        </select>
+                        <select id="postStatusFilter" onchange="filterPosts()">
+                            <option value="">All Status</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="projects-table">
+                        <thead>
+                            <tr>
+                                <th width="60">Image</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Author</th>
+                                <th>Published</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                            <tr class="empty-row"><td colspan="7">
+                                <div class="empty-state"><i class="fa fa-spinner fa-spin"></i><p>Loading…</p></div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- ═══════════ END BLOG SECTION ═══════════ -->
+
+    </main>
+</div>
+
+<!-- ADD / EDIT PROJECT MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New Project</h2>
+            <button class="modal-close" onclick="closeModal()"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="projectForm" onsubmit="saveProject(event)">
+                <input type="hidden" id="projectId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project Name <span class="req">*</span></label>
+                        <input type="text" id="projName" placeholder="e.g. Aspen Heights" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category <span class="req">*</span></label>
+                        <select id="projCategory" required>
+                            <option value="">Select category</option>
+                            <option value="residential">Residential</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="renovation">Renovation</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status <span class="req">*</span></label>
+                        <select id="projStatus" required>
+                            <option value="">Select status</option>
+                            <option value="ongoing">Ongoing</option>
+                            <option value="completed">Completed</option>
+                            <option value="upcoming">Upcoming</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="number" id="projYear" placeholder="e.g. 2024" min="2000" max="2099">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="projLocation" placeholder="e.g. Accra, Ghana">
+                </div>
+
+                <div class="form-group">
+                    <label>Short Description <span class="req">*</span></label>
+                    <textarea id="projDesc" rows="3" placeholder="Brief description of the project..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Auto-generated Page Link</label>
+                    <div class="slug-preview">
+                        <i class="fa fa-link"></i>
+                        <span id="slugDisplay">Enter a project name above…</span>
+                    </div>
+                    <p class="field-hint">This is generated automatically from the project name. Each project gets its own page.</p>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label>Project Image <span class="req">*</span></label>
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageFile').click()">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="fa fa-cloud-upload-alt"></i>
+                            <p>Click to upload image</p>
+                            <span>JPG, PNG, WEBP — max 5MB</span>
+                        </div>
+                        <img id="imagePreview" src="" alt="" style="display:none;">
+                        <input type="file" id="imageFile" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
+                    </div>
+                    <div class="form-group" style="margin-top:8px;">
+                        <input type="text" id="projImagePath" placeholder="Or type image path: images/my-project.jpg">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fa fa-save"></i> Save Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteOverlay" onclick="closeDeleteOutside(event)">
+    <div class="modal-box modal-sm">
+        <div class="modal-header danger">
+            <h2><i class="fa fa-trash"></i> Delete Project</h2>
+            <button class="modal-close" onclick="closeDelete()"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="deleteProjectName"></strong>? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeDelete()">Cancel</button>
+                <button class="btn-danger" onclick="confirmDelete()"><i class="fa fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ADD / EDIT POST MODAL -->
+<div class="modal-overlay" id="postModalOverlay" onclick="closePostModalOutside(event)">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h2 id="postModalTitle">New Blog Post</h2>
+            <button class="modal-close" onclick="closePostModal()"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="postForm" onsubmit="savePost(event)">
+                <input type="hidden" id="postId">
+
+                <div class="form-group">
+                    <label>Post Title <span class="req">*</span></label>
+                    <input type="text" id="postTitle" placeholder="e.g. 10 Tips for Choosing the Right Builder" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Auto-generated Link</label>
+                    <div class="slug-preview"><i class="fa fa-link"></i><span id="postSlugDisplay">Enter a title above…</span></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="postCategory">
+                            <option value="">Select category</option>
+                            <option value="construction">Construction</option>
+                            <option value="design">Design</option>
+                            <option value="renovation">Renovation</option>
+                            <option value="technology">Technology</option>
+                            <option value="tips">Tips & Advice</option>
+                            <option value="news">News</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status <span class="req">*</span></label>
+                        <select id="postStatus" required>
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Author</label>
+                        <input type="text" id="postAuthor" placeholder="Claricent Team" value="Claricent Team">
+                    </div>
+                    <div class="form-group">
+                        <label>Tags <span style="color:var(--text-muted);font-weight:400">(comma separated)</span></label>
+                        <input type="text" id="postTags" placeholder="e.g. construction, design, Ghana">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Excerpt <span style="color:var(--text-muted);font-weight:400">(short summary shown on cards)</span></label>
+                    <textarea id="postExcerpt" rows="2" placeholder="A brief 1-2 sentence summary of the post…"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Featured Image</label>
+                    <div class="upload-zone" id="postUploadZone" onclick="document.getElementById('postImageFile').click()">
+                        <div class="upload-placeholder" id="postUploadPlaceholder">
+                            <i class="fa fa-cloud-upload-alt"></i>
+                            <p>Click to upload featured image</p>
+                            <span>JPG, PNG, WEBP — max 5MB</span>
+                        </div>
+                        <img id="postImagePreview" src="" alt="" style="display:none;max-height:180px;border-radius:6px;">
+                        <input type="file" id="postImageFile" accept="image/*" style="display:none;" onchange="handlePostImageSelect(event)">
+                    </div>
+                    <input type="text" id="postImagePath" placeholder="Or type image path: images/post-image.jpg" style="margin-top:8px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Post Body <span class="req">*</span></label>
+                    <div class="rich-editor-toolbar" id="editorToolbar">
+                        <button type="button" onclick="fmt('bold')"         title="Bold"><b>B</b></button>
+                        <button type="button" onclick="fmt('italic')"       title="Italic"><i>I</i></button>
+                        <button type="button" onclick="fmt('underline')"    title="Underline"><u>U</u></button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" onclick="fmtBlock('h2')"      title="Heading 2">H2</button>
+                        <button type="button" onclick="fmtBlock('h3')"      title="Heading 3">H3</button>
+                        <button type="button" onclick="fmtBlock('p')"       title="Paragraph">P</button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" onclick="fmt('insertUnorderedList')" title="Bullet List"><i class="fa fa-list-ul"></i></button>
+                        <button type="button" onclick="fmt('insertOrderedList')"   title="Numbered List"><i class="fa fa-list-ol"></i></button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" onclick="fmtBlock('blockquote')" title="Blockquote"><i class="fa fa-quote-left"></i></button>
+                        <button type="button" onclick="insertLink()"           title="Insert Link"><i class="fa fa-link"></i></button>
+                    </div>
+                    <div id="postBodyEditor" class="rich-editor" contenteditable="true"
+                         data-placeholder="Write your blog post content here…"></div>
+                    <textarea id="postBody" style="display:none;"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-outline" onclick="closePostModal()">Cancel</button>
+                    <button type="button" class="btn-outline" onclick="savePostAs('draft')">
+                        <i class="fa fa-save"></i> Save Draft
+                    </button>
+                    <button type="submit" class="btn-primary" id="postSaveBtn">
+                        <i class="fa fa-paper-plane"></i> Publish Post
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE POST CONFIRM -->
+<div class="modal-overlay" id="deletePostOverlay" onclick="if(event.target===this)closeDeletePost()">
+    <div class="modal-box modal-sm">
+        <div class="modal-header danger">
+            <h2><i class="fa fa-trash"></i> Delete Post</h2>
+            <button class="modal-close" onclick="closeDeletePost()"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="deletePostTitle"></strong>? This cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeDeletePost()">Cancel</button>
+                <button class="btn-danger" onclick="confirmDeletePost()"><i class="fa fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DIAGNOSE MODAL -->
+<div class="modal-overlay" id="diagnoseOverlay" onclick="if(event.target===this)document.getElementById('diagnoseOverlay').classList.remove('open')">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h2><i class="fa fa-stethoscope"></i> Server Diagnostics</h2>
+            <button class="modal-close" onclick="document.getElementById('diagnoseOverlay').classList.remove('open')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="diagnoseBody">
+            <p style="color:var(--text-muted)">Running checks…</p>
+        </div>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
