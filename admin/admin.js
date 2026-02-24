@@ -372,114 +372,55 @@ async function confirmDelete() {
    DIAGNOSE
    ============================================================ */
 async function runDiagnose() {
-    document.getElementById("diagnoseOverlay").classList.add("open");
-    document.getElementById("diagnoseBody").innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:20px 0"><i class="fa fa-spinner fa-spin"></i> Running checks…</p>`;
+    const modal   = document.getElementById("diagnoseModal");
+    const content = document.getElementById("diagnoseContent");
+    modal.classList.add("open");
+    content.innerHTML = `<div class="empty-state"><i class="fa fa-spinner fa-spin"></i><p>Running checks…</p></div>`;
 
     try {
         const res = await api("diagnose");
-        if (!res.success) {
-            document.getElementById("diagnoseBody").innerHTML = `<p style="color:var(--danger)">${escHtml(res.error || "Diagnose failed")}</p>`;
-            return;
-        }
+        const c   = res.checks;
 
-        const c = res.checks;
-        const row = (label, ok, note = "") => {
-            const icon  = ok ? `<i class="fa fa-check-circle" style="color:var(--success)"></i>` : `<i class="fa fa-times-circle" style="color:var(--danger)"></i>`;
-            const color = ok ? "var(--success)" : "var(--danger)";
-            return `<div class="diag-row">
-                <div>${icon} <span style="color:${color};font-weight:600">${escHtml(label)}</span></div>
-                ${note ? `<div class="diag-note">${escHtml(note)}</div>` : ""}
+        const row = (label, ok, note = "") => `
+            <div class="diag-row">
+                <span class="diag-status ${ok ? "ok" : "fail"}">${ok ? "✓" : "✗"}</span>
+                <span class="diag-label">${label}</span>
+                ${note ? `<span class="diag-note">${escHtml(String(note))}</span>` : ""}
             </div>`;
-        };
 
         let html = `<div class="diag-list">`;
-        html += `<div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Projects</div>`;
-        html += row("projects.html exists",       c.projects_html_exists,          c.projects_file_path || "");
-        html += row("projects.html is writable",  c.projects_html_writable,        !c.projects_html_writable ? "Run: chmod 664 projects.html" : "");
-        html += row("Projects start marker",      c.projects_html_has_start_marker,!c.projects_html_has_start_marker ? "Upload the NEW projects.html" : "");
-        html += row("Projects end marker",        c.projects_html_has_end_marker,  "");
-        html += `<div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;margin:12px 0 4px">Blog</div>`;
-        html += row("blog.html exists",           c.blog_html_exists,              c.blog_file_path || "");
-        html += row("blog.html is writable",      c.blog_html_writable,            !c.blog_html_writable ? "Run: chmod 664 blog.html" : "");
-        html += row("Blog start marker",          c.blog_html_has_start_marker,    !c.blog_html_has_start_marker ? "Upload the NEW blog.html" : "");
-        html += row("Blog end marker",            c.blog_html_has_end_marker,      "");
-        html += `<div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;margin:12px 0 4px">Server</div>`;
-        html += row("images/ folder exists",      c.images_dir_exists,             c.images_dir_path || "");
-        html += row("images/ folder is writable", c.images_dir_writable,           !c.images_dir_writable ? "Run: chmod 755 images/" : "");
-        html += row("Database connected",         c.db_connected,                  c.db_error || (c.db_connected ? `${c.db_project_count} project(s) in DB` : ""));
-        html += `<div class="diag-row" style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
-            <span style="color:var(--text-muted);font-size:12px">PHP ${escHtml(c.php_version)}</span>
-        </div>`;
+
+        html += `<div class="diag-section-head">PHP Files</div>`;
+        html += row("projects.php exists", c.projects_php_exists, !c.projects_php_exists ? "Upload projects.php to website root" : "Fetching live from DB ✓");
+        html += row("blog.php exists",     c.blog_php_exists,     !c.blog_php_exists     ? "Upload blog.php to website root"     : "Fetching live from DB ✓");
+
+        html += `<div class="diag-section-head">Server</div>`;
+        html += row("images/ folder exists",   c.images_dir_exists,   c.upload_dir_path || "");
+        html += row("images/ folder writable", c.images_dir_writable, !c.images_dir_writable ? "Run: chmod 755 images/" : "");
+
+        html += `<div class="diag-section-head">Database</div>`;
+        html += row("DB connected", c.db_connected, c.db_error || `${c.db_project_count} project(s), ${c.db_post_count} published post(s)`);
+
+        html += `<div class="diag-section-head">Server Info</div>`;
+        html += row("PHP version", true, `PHP ${c.php_version}`);
+
         html += `</div>`;
 
-        const allOk = c.projects_html_exists && c.projects_html_writable &&
-                      c.projects_html_has_start_marker && c.projects_html_has_end_marker &&
-                      c.blog_html_exists && c.blog_html_writable &&
-                      c.blog_html_has_start_marker && c.blog_html_has_end_marker &&
+        const allOk = c.projects_php_exists && c.blog_php_exists &&
                       c.images_dir_exists && c.images_dir_writable && c.db_connected;
 
-        html += allOk
-            ? `<p class="diag-status ok"><i class="fa fa-check-circle"></i> Everything looks good! Auto-rebuild is ready.</p>`
-            : `<p class="diag-status fail"><i class="fa fa-triangle-exclamation"></i> Fix the red items above, then try again.</p>`;
+        html += `<div class="diag-summary ${allOk ? "ok" : "fail"}">
+            ${allOk
+                ? "<i class='fa fa-check-circle'></i> Everything looks good!"
+                : "<i class='fa fa-exclamation-triangle'></i> Fix the red items above."}
+        </div>`;
 
-        document.getElementById("diagnoseBody").innerHTML = html;
-    } catch (e) {
-        document.getElementById("diagnoseBody").innerHTML = `<p style="color:var(--danger)">Error: ${escHtml(e.message)}</p>`;
+        content.innerHTML = html;
+    } catch(e) {
+        content.innerHTML = `<div class="alert alert-error"><i class="fa fa-times-circle"></i> Diagnose failed: ${escHtml(e.message)}</div>`;
     }
 }
 
-/* ============================================================
-   ALERTS
-   ============================================================ */
-let alertTimeout;
-function showAlert(msg, type = "info") {
-    const zone  = document.getElementById("alertZone");
-    const icons = { success:"fa-check-circle", error:"fa-times-circle", info:"fa-info-circle" };
-    zone.innerHTML = `<div class="alert alert-${type}"><i class="fa ${icons[type]}"></i><span>${escHtml(msg)}</span></div>`;
-    clearTimeout(alertTimeout);
-    alertTimeout = setTimeout(() => { zone.innerHTML = ""; }, 6000);
-}
-
-/* ============================================================
-   UTILS
-   ============================================================ */
-function escHtml(str) {
-    return String(str)
-        .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
-
-/* ============================================================
-   SECTION SWITCHER (Projects ↔ Blog)
-   ============================================================ */
-function switchSection(section, el) {
-    // Toggle nav active state
-    document.querySelectorAll('.nav-item[data-section]').forEach(n => n.classList.remove('active'));
-    if (el) el.classList.add('active');
-
-    // Toggle sections
-    const projectsSection = document.querySelector('.content-card');
-    const projectsTopbar  = document.querySelector('.topbar');
-    const projectsAlert   = document.getElementById('alertZone');
-    const blogSection     = document.getElementById('blogSection');
-
-    // Wrap project elements in a named section for easy toggling
-    const projectSection = document.getElementById('projectsSection');
-
-    if (section === 'blog') {
-        if (projectSection) projectSection.style.display = 'none';
-        blogSection.style.display = 'block';
-        loadPosts();
-    } else {
-        if (projectSection) projectSection.style.display = 'block';
-        blogSection.style.display = 'none';
-    }
-}
-
-/* ============================================================
-   BLOG — TABLE
-   ============================================================ */
-let allPosts = [];
 
 async function loadPosts() {
     document.getElementById("postsTableBody").innerHTML = `
@@ -670,9 +611,9 @@ async function savePost(e) {
         if (status === "published") {
             const rb = await api("rebuild_blog_page");
             if (rb.success) {
-                showBlogAlert(`✓ "${title}" published! blog.html updated with ${rb.post_count} post${rb.post_count !== 1 ? "s" : ""}.`, "success");
+                showBlogAlert(`✓ "${title}" published! blog.php is now showing ${rb.post_count} post${rb.post_count !== 1 ? "s" : ""} live.`, "success");
             } else {
-                showBlogAlert("Post saved but blog.html rebuild failed: " + (rb.error || ""), "error");
+                showBlogAlert("Post saved. (Note: " + (rb.error || "rebuild skipped") + ")", "info");
             }
         } else {
             showBlogAlert(`"${title}" saved as draft.`, "success");
@@ -756,7 +697,7 @@ async function confirmDeletePost() {
         closeDeletePost();
         await loadPosts();
         const rb = await api("rebuild_blog_page");
-        showBlogAlert(rb.success ? "Post deleted and blog.html updated." : "Deleted but rebuild failed: " + rb.error, rb.success ? "success" : "error");
+        showBlogAlert(rb.success ? "Post deleted. blog.php updated live." : "Post deleted.", "success");
     } catch (err) {
         showBlogAlert("Error: " + err.message, "error");
         btn.disabled = false; btn.innerHTML = `<i class="fa fa-trash"></i> Delete`;
