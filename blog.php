@@ -1,3 +1,49 @@
+<?php
+/* ─── DB CONFIG — match your admin/api.php ─────────────── */
+define("DB_HOST",    "localhost");
+define("DB_NAME",    "claricen_db");
+define("DB_USER",    "root");
+define("DB_PASS",    "");              // ← your DB password if any
+
+define("DB_CHARSET", "utf8mb4");
+
+function db(): PDO {
+    static $pdo = null;
+    if ($pdo === null) {
+        $pdo = new PDO(
+            "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=".DB_CHARSET,
+            DB_USER, DB_PASS,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+        );
+    }
+    return $pdo;
+}
+
+// Pagination
+$perPage     = 6;
+$currentPage = max(1, (int)($_GET["page"] ?? 1));
+$offset      = ($currentPage - 1) * $perPage;
+
+try {
+    $total = (int) db()->query("SELECT COUNT(*) FROM blog_posts WHERE status='published'")->fetchColumn();
+    $posts = db()->prepare(
+        "SELECT * FROM blog_posts WHERE status='published'
+         ORDER BY published_at DESC, created_at DESC
+         LIMIT :limit OFFSET :offset"
+    );
+    $posts->bindValue(':limit',  $perPage, PDO::PARAM_INT);
+    $posts->bindValue(':offset', $offset,  PDO::PARAM_INT);
+    $posts->execute();
+    $posts = $posts->fetchAll();
+} catch (Exception $e) {
+    $posts = [];
+    $total = 0;
+}
+
+$totalPages = $total > 0 ? (int) ceil($total / $perPage) : 1;
+$delays     = ["0s","0.25s","0.5s","0.75s","1s","1.25s"];
+?>
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -71,7 +117,7 @@
                                 <li class="nav-item"><a class="nav-link" href="about-us.html">About Us</a></li>
                                 <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
                                 <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
-                                <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                                <li class="nav-item"><a class="nav-link" href="blog.php">Blog</a></li>
                                 <!-- <li class="nav-item"><a class="nav-link" href="#">Pages</a>
                                     <ul>                                        
                                         <li class="nav-item"><a class="nav-link" href="service-single.html">Service Details</a></li>
@@ -128,114 +174,71 @@
     <div class="page-blog">
         <div class="container">
             <div class="row">
-                <!-- ADMIN:BLOG:START -->
+                <?php if (empty($posts)): ?>
+                <div class="col-12 text-center" style="padding:60px 0;color:#667282;">
+                    <i class="fa fa-newspaper" style="font-size:40px;margin-bottom:16px;display:block;opacity:0.4;"></i>
+                    <p>No blog posts yet. Add your first post in the admin panel.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($posts as $i => $p):
+                    $delay  = $delays[$i % count($delays)];
+                    $imgSrc = htmlspecialchars($p["image_path"] ?: "images/post-placeholder.jpg", ENT_QUOTES, "UTF-8");
+                    $title  = htmlspecialchars($p["title"], ENT_QUOTES, "UTF-8");
+                    $slug   = htmlspecialchars($p["slug"],  ENT_QUOTES, "UTF-8");
+                    $href   = "blog-detail.php?slug={$slug}";
+                    $delayAttr = $delay !== "0s" ? ' data-wow-delay="' . $delay . '"' : "";
+                ?>
                 <div class="col-lg-4 col-md-6">
                     <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp">
+                    <div class="blog-item wow fadeInUp"<?= $delayAttr ?>>
                         <!-- Post Featured Image Start-->
                         <div class="post-featured-image" data-cursor-text="View">
                             <figure>
-                                <a href="blog-detail.php?slug=3rd-one" class="image-anime">
-                                    <img src="images/Engr_Emmanuel-Morgue-Claricent_Company.jpeg" alt="3rd one">
+                                <a href="<?= $href ?>" class="image-anime">
+                                    <img src="<?= $imgSrc ?>" alt="<?= $title ?>">
                                 </a>
                             </figure>
                         </div>
                         <!-- Post Featured Image End -->
 
-                        <!-- post Item Content Start -->
+                        <!-- Post Item Content Start -->
                         <div class="post-item-content">
-                            <!-- post Item Body Start -->
                             <div class="post-item-body">
-                                <h2><a href="blog-detail.php?slug=3rd-one">3rd one</a></h2>
+                                <h2><a href="<?= $href ?>"><?= $title ?></a></h2>
                             </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
                             <div class="post-item-footer">
-                                <a href="blog-detail.php?slug=3rd-one" class="readmore-btn">read more</a>
+                                <a href="<?= $href ?>" class="readmore-btn">read more</a>
                             </div>
-                            <!-- Post Item Footer End-->
                         </div>
-                        <!-- post Item Content End -->
+                        <!-- Post Item Content End -->
                     </div>
                     <!-- Blog Item End -->
                 </div>
-                <div class="col-lg-4 col-md-6">
-                    <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp" data-wow-delay="0.25s">
-                        <!-- Post Featured Image Start-->
-                        <div class="post-featured-image" data-cursor-text="View">
-                            <figure>
-                                <a href="blog-detail.php?slug=maybe" class="image-anime">
-                                    <img src="images/claricent-bg-4.jpeg" alt="maybe">
-                                </a>
-                            </figure>
-                        </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
-                        <div class="post-item-content">
-                            <!-- post Item Body Start -->
-                            <div class="post-item-body">
-                                <h2><a href="blog-detail.php?slug=maybe">maybe</a></h2>
-                            </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
-                            <div class="post-item-footer">
-                                <a href="blog-detail.php?slug=maybe" class="readmore-btn">read more</a>
-                            </div>
-                            <!-- Post Item Footer End-->
-                        </div>
-                        <!-- post Item Content End -->
-                    </div>
-                    <!-- Blog Item End -->
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp" data-wow-delay="0.5s">
-                        <!-- Post Featured Image Start-->
-                        <div class="post-featured-image" data-cursor-text="View">
-                            <figure>
-                                <a href="blog-detail.php?slug=10-tips" class="image-anime">
-                                    <img src="images/claricent-bg-7.jpeg" alt="10 tips">
-                                </a>
-                            </figure>
-                        </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
-                        <div class="post-item-content">
-                            <!-- post Item Body Start -->
-                            <div class="post-item-body">
-                                <h2><a href="blog-detail.php?slug=10-tips">10 tips</a></h2>
-                            </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
-                            <div class="post-item-footer">
-                                <a href="blog-detail.php?slug=10-tips" class="readmore-btn">read more</a>
-                            </div>
-                            <!-- Post Item Footer End-->
-                        </div>
-                        <!-- post Item Content End -->
-                    </div>
-                    <!-- Blog Item End -->
-                </div>
-                <!-- ADMIN:BLOG:END -->
+                <?php endforeach; ?>
+            <?php endif; ?>
             </div>
             <div class="row">
 				<div class="col-md-12">
 					<!-- Post Pagination Start -->
+					<?php if ($totalPages > 1): ?>
 					<div class="post-pagination wow fadeInUp" data-wow-delay="0.75s">
 						<ul class="pagination">
-							<li><a href="#"><i class="fa-solid fa-arrow-left-long"></i></a></li>
-							<li class="active"><a href="#">1</a></li>
-							<li><a href="#">2</a></li>
-							<li><a href="#">3</a></li>
-							<li><a href="#"><i class="fa-solid fa-arrow-right-long"></i></a></li>
+							<?php if ($currentPage > 1): ?>
+							<li><a href="blog.php?page=<?= $currentPage - 1 ?>"><i class="fa-solid fa-arrow-left-long"></i></a></li>
+							<?php endif; ?>
+
+							<?php for ($pg = 1; $pg <= $totalPages; $pg++): ?>
+							<li class="<?= $pg === $currentPage ? 'active' : '' ?>">
+								<a href="blog.php?page=<?= $pg ?>"><?= $pg ?></a>
+							</li>
+							<?php endfor; ?>
+
+							<?php if ($currentPage < $totalPages): ?>
+							<li><a href="blog.php?page=<?= $currentPage + 1 ?>"><i class="fa-solid fa-arrow-right-long"></i></a></li>
+							<?php endif; ?>
 						</ul>
 					</div>
+					<?php endif; ?>
 					<!-- Post Pagination End -->
 				</div>
 			</div>

@@ -26,9 +26,9 @@ define("ADMIN_USER",     "admin");          // ← CHANGE THIS
 define("ADMIN_PASS",     "claricent2024");  // ← CHANGE THIS
 
 define("UPLOAD_DIR",     "../images/");
-define("PROJECTS_FILE",  "../projects.html");
-define("BLOG_FILE",      "../blog.html");
-define("POSTS_PER_PAGE", 6);
+define("PROJECTS_FILE",  "../projects.php");
+// define("BLOG_FILE", "../blog.html"); // no longer needed — blog.php fetches live
+// define("POSTS_PER_PAGE", 6); // pagination now handled in blog.php
 define("MAX_FILESIZE",   5 * 1024 * 1024);
 define("ALLOWED_MIME",   ["image/jpeg","image/png","image/webp","image/gif"]);
 define("ALLOWED_EXT",    ["jpg","jpeg","png","webp","gif"]);
@@ -311,149 +311,42 @@ function uploadImage(): void {
    AUTO-REBUILD projects.html
    ══════════════════════════════════════════════════════════ */
 function rebuildProjectsPage(): void {
-    $file = PROJECTS_FILE;
-
-    if (!file_exists($file)) {
-        respond(false, null,
-            "projects.html not found. Expected at: " . realpath(dirname(PROJECTS_FILE)) . "/projects.html — " .
-            "make sure you uploaded the new projects.html (with marker comments) to your website root.");
-    }
-    if (!is_writable($file)) {
-        respond(false, null,
-            "projects.html is not writable. SSH into your server and run: chmod 664 projects.html");
-    }
-
-    $html = str_replace("\r\n", "\n", file_get_contents($file)); // normalize CRLF
-
-    // Check markers exist — flexible regex that handles any whitespace
-    if (!preg_match('/<!--\s*ADMIN:PROJECTS:START\s*-->/', $html)) {
-        respond(false, null,
-            "Marker <!-- ADMIN:PROJECTS:START --> not found in projects.html. " .
-            "Please upload the new projects.html file that was provided — it contains the required marker comments.");
-    }
-
-    // Auto-insert missing end marker right after start if absent
-    if (!preg_match('/<!--\s*ADMIN:PROJECTS:END\s*-->/', $html)) {
-        $html = preg_replace(
-            '/<!--\s*ADMIN:PROJECTS:START\s*-->/',
-            "<!-- ADMIN:PROJECTS:START -->\n                <!-- ADMIN:PROJECTS:END -->",
-            $html
-        );
-    }
-
-    // Fetch all projects
-    $projects = db()->query("SELECT * FROM projects ORDER BY sort_order ASC, created_at DESC")->fetchAll();
-
-    // Build inner HTML
-    $delays = ["0.25s","0.5s","0.75s","1s","1.25s","1.5s"];
-    $inner  = "<!-- ADMIN:PROJECTS:START -->";
-
-    if (empty($projects)) {
-        $inner .= "\n                <!-- No projects yet -->";
-    } else {
-        foreach ($projects as $i => $p) {
-            $delay   = $delays[$i % count($delays)];
-            $imgSrc  = htmlspecialchars($p["image_path"] ?: "images/placeholder.jpg", ENT_QUOTES, "UTF-8");
-            $name    = htmlspecialchars($p["name"], ENT_QUOTES, "UTF-8");
-            $nameLow = htmlspecialchars(strtolower($p["name"]), ENT_QUOTES, "UTF-8");
-            $desc    = htmlspecialchars($p["description"], ENT_QUOTES, "UTF-8");
-            $slug    = htmlspecialchars($p["slug"], ENT_QUOTES, "UTF-8");
-            $href    = "project-detail.php?slug={$slug}";
-
-            $inner .= "
-                <div class=\"col-lg-4 col-md-6\">
-                    <!-- Project Item Start -->
-                    <div class=\"project-item wow fadeInUp\" data-wow-delay=\"{$delay}\">
-                        <!-- Project Image Start -->
-                        <div class=\"project-image\" data-cursor-text=\"View\">
-                            <a href=\"{$href}\">
-                                <figure>
-                                    <img src=\"{$imgSrc}\" alt=\"{$name}\">
-                                </figure>
-                            </a>
-                        </div>
-                        <!-- Project Image End -->
-
-                        <!-- Project Body Start -->
-                        <div class=\"project-body\">
-                            <!-- Project Body Title Start -->
-                            <div class=\"project-body-title\">
-                                <h3>{$nameLow}</h3>
-                            </div>
-                            <!-- Project Body Title End -->
-
-                            <!-- Project Content Start -->
-                            <div class=\"project-content\">
-                                <p>{$desc}</p>
-                                <div class=\"project-content-footer\">
-                                    <a href=\"{$href}\" class=\"readmore-btn\">view more</a>
-                                </div>
-                            </div>
-                            <!-- Project Content End -->
-                        </div>
-                        <!-- Project Body End -->
-                    </div>
-                    <!-- Project Item End -->
-                </div>";
-        }
-    }
-
-    $inner .= "\n                <!-- ADMIN:PROJECTS:END -->";
-
-    // Replace content between markers — flexible whitespace in pattern
-    $pattern = '/<!--\s*ADMIN:PROJECTS:START\s*-->.*?<!--\s*ADMIN:PROJECTS:END\s*-->/s';
-    $updated = preg_replace($pattern, $inner, $html);
-
-    if ($updated === null) {
-        respond(false, null, "Regex replacement failed.");
-    }
-    if ($updated === $html) {
-        respond(false, null, "Markers found but content unchanged — regex matched nothing. Check START and END markers are on their own lines.");
-    }
-
-    if (file_put_contents($file, $updated, LOCK_EX) === false) {
-        respond(false, null, "Write failed. Check permissions on projects.html.");
-    }
-
-    respond(true, ["project_count" => count($projects)]);
+    // projects.php now fetches live from the database — no file rebuild needed.
+    $count = (int) db()->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+    respond(true, ["project_count" => $count, "note" => "projects.php fetches live from DB"]);
 }
 
 /* ══════════════════════════════════════════════════════════
    DIAGNOSE — call from admin to check everything is wired up
    ══════════════════════════════════════════════════════════ */
 function diagnose(): void {
-    $file    = PROJECTS_FILE;
-    $imgDir  = UPLOAD_DIR;
-    $html    = file_exists($file) ? file_get_contents($file) : "";
+    $imgDir = UPLOAD_DIR;
 
-    $blogFile = BLOG_FILE;
-    $blogHtml = file_exists($blogFile) ? file_get_contents($blogFile) : "";
+    // DB check
+    $dbOk    = false;
+    $dbError = null;
+    $projCount = 0;
+    $postCount = 0;
+    try {
+        $projCount = (int) db()->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+        $postCount = (int) db()->query("SELECT COUNT(*) FROM blog_posts WHERE status='published'")->fetchColumn();
+        $dbOk = true;
+    } catch (Exception $e) {
+        $dbError = $e->getMessage();
+    }
+
     $checks = [
-        "projects_html_exists"    => file_exists($file),
-        "projects_html_writable"  => is_writable($file),
-        "projects_html_has_start_marker" => (bool) preg_match('/<!--\s*ADMIN:PROJECTS:START\s*-->/', $html),
-        "projects_html_has_end_marker"   => (bool) preg_match('/<!--\s*ADMIN:PROJECTS:END\s*-->/',   $html),
-        "blog_html_exists"        => file_exists($blogFile),
-        "blog_html_writable"      => is_writable($blogFile),
-        "blog_html_has_start_marker" => (bool) preg_match('/<!--\s*ADMIN:BLOG:START\s*-->/', $blogHtml),
-        "blog_html_has_end_marker"   => (bool) preg_match('/<!--\s*ADMIN:BLOG:END\s*-->/',   $blogHtml),
+        "projects_php_exists"     => file_exists("../projects.php"),
+        "blog_php_exists"         => file_exists("../blog.php"),
         "images_dir_exists"       => is_dir($imgDir),
         "images_dir_writable"     => is_writable($imgDir),
+        "db_connected"            => $dbOk,
+        "db_error"                => $dbError,
+        "db_project_count"        => $projCount,
+        "db_post_count"           => $postCount,
         "php_version"             => PHP_VERSION,
-        "projects_file_path"      => realpath($file) ?: $file . " (not found)",
-        "blog_file_path"          => realpath($blogFile) ?: $blogFile . " (not found)",
-        "images_dir_path"         => realpath($imgDir) ?: $imgDir . " (not found)",
+        "upload_dir_path"         => realpath($imgDir) ?: $imgDir . " (not found)",
     ];
-
-    // Test DB connection
-    try {
-        $count = (int) db()->query("SELECT COUNT(*) FROM projects")->fetchColumn();
-        $checks["db_connected"]      = true;
-        $checks["db_project_count"]  = $count;
-    } catch (Throwable $e) {
-        $checks["db_connected"] = false;
-        $checks["db_error"]     = $e->getMessage();
-    }
 
     respond(true, ["checks" => $checks]);
 }
@@ -602,100 +495,7 @@ function sanitizeBlogInput(): array {
    AUTO-REBUILD blog.html
    ══════════════════════════════════════════════════════════ */
 function rebuildBlogPage(): void {
-    $file = BLOG_FILE;
-
-    if (!file_exists($file)) {
-        respond(false, null, "blog.html not found. Upload the new blog.html with marker comments.");
-    }
-    if (!is_writable($file)) {
-        respond(false, null, "blog.html is not writable. Run: chmod 664 blog.html");
-    }
-
-    $html = str_replace("\r\n", "\n", file_get_contents($file)); // normalize CRLF
-
-    // Check start marker exists
-    if (!preg_match('/<!--\s*ADMIN:BLOG:START\s*-->/', $html)) {
-        respond(false, null, "Marker <!-- ADMIN:BLOG:START --> not found in blog.html. Upload the new blog.html provided.");
-    }
-
-    // If end marker is missing, auto-insert it right after the start marker
-    // so the regex always has something to replace between
-    if (!preg_match('/<!--\s*ADMIN:BLOG:END\s*-->/', $html)) {
-        $html = preg_replace(
-            '/<!--\s*ADMIN:BLOG:START\s*-->/',
-            "<!-- ADMIN:BLOG:START -->\n                <!-- ADMIN:BLOG:END -->",
-            $html
-        );
-    }
-
-    // Only show published posts
-    $posts = db()->query("SELECT * FROM blog_posts WHERE status='published' ORDER BY published_at DESC, created_at DESC")->fetchAll();
-
-    $delays = ["0s","0.25s","0.5s","0.75s","1s","1.25s"];
-    $inner  = "<!-- ADMIN:BLOG:START -->";
-
-    if (empty($posts)) {
-        $inner .= "\n                <!-- No published posts yet -->";
-    } else {
-        foreach ($posts as $i => $p) {
-            $delay     = $delays[$i % count($delays)];
-            $imgSrc    = htmlspecialchars($p["image_path"] ?: "images/post-placeholder.jpg", ENT_QUOTES, "UTF-8");
-            $title     = htmlspecialchars($p["title"], ENT_QUOTES, "UTF-8");
-            $slug      = htmlspecialchars($p["slug"],  ENT_QUOTES, "UTF-8");
-            $href      = "blog-detail.php?slug={$slug}";
-            $delayAttr = $delay !== "0s" ? " data-wow-delay=\"{$delay}\"" : "";
-
-            $inner .= "
-                <div class=\"col-lg-4 col-md-6\">
-                    <!-- Blog Item Start -->
-                    <div class=\"blog-item wow fadeInUp\"{$delayAttr}>
-                        <!-- Post Featured Image Start-->
-                        <div class=\"post-featured-image\" data-cursor-text=\"View\">
-                            <figure>
-                                <a href=\"{$href}\" class=\"image-anime\">
-                                    <img src=\"{$imgSrc}\" alt=\"{$title}\">
-                                </a>
-                            </figure>
-                        </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
-                        <div class=\"post-item-content\">
-                            <!-- post Item Body Start -->
-                            <div class=\"post-item-body\">
-                                <h2><a href=\"{$href}\">{$title}</a></h2>
-                            </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
-                            <div class=\"post-item-footer\">
-                                <a href=\"{$href}\" class=\"readmore-btn\">read more</a>
-                            </div>
-                            <!-- Post Item Footer End-->
-                        </div>
-                        <!-- post Item Content End -->
-                    </div>
-                    <!-- Blog Item End -->
-                </div>";
-        }
-    }
-
-    $inner .= "\n                <!-- ADMIN:BLOG:END -->";
-
-    // Replace between markers (flexible whitespace, dotall for multiline)
-    $pattern = '/<!--\s*ADMIN:BLOG:START\s*-->.*?<!--\s*ADMIN:BLOG:END\s*-->/s';
-    $updated = preg_replace($pattern, $inner, $html);
-
-    if ($updated === null) {
-        respond(false, null, "Regex replacement returned null — PHP regex error.");
-    }
-    if ($updated === $html) {
-        respond(false, null, "Markers found but content was unchanged — the regex matched nothing. Check that START and END markers are on separate lines with no extra characters.");
-    }
-
-    if (file_put_contents($file, $updated, LOCK_EX) === false) {
-        respond(false, null, "Write failed. Check file permissions: chmod 664 blog.html");
-    }
-
-    respond(true, ["post_count" => count($posts)]);
+    // blog.php now fetches live from the database — no file rebuild needed.
+    $count = (int) db()->query("SELECT COUNT(*) FROM blog_posts WHERE status='published'")->fetchColumn();
+    respond(true, ["post_count" => $count, "note" => "blog.php fetches live from DB"]);
 }

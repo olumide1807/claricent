@@ -1,3 +1,46 @@
+<?php
+/* ─── DB CONFIG ─────────────────────────────────────────── */
+define("DB_HOST",    "localhost");
+define("DB_NAME",    "claricen_db");   // ← your DB name
+define("DB_USER",    "root");          // ← your DB user
+define("DB_PASS",    "");             // ← your DB password
+define("DB_CHARSET", "utf8mb4");
+
+function db(): PDO {
+    static $pdo = null;
+    if ($pdo === null) {
+        $pdo = new PDO(
+            "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=".DB_CHARSET,
+            DB_USER, DB_PASS,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+        );
+    }
+    return $pdo;
+}
+
+// Fetch latest 4 projects for homepage preview
+try {
+    $homeProjects = db()->query(
+        "SELECT * FROM projects ORDER BY sort_order ASC, created_at DESC LIMIT 4"
+    )->fetchAll();
+} catch (Exception $e) {
+    $homeProjects = [];
+}
+
+// Fetch latest 3 blog posts for homepage preview
+try {
+    $homePosts = db()->query(
+        "SELECT * FROM blog_posts WHERE status='published'
+         ORDER BY published_at DESC, created_at DESC LIMIT 3"
+    )->fetchAll();
+} catch (Exception $e) {
+    $homePosts = [];
+}
+
+$delays     = ["0.25s","0.5s","0.75s","1s"];
+$blogDelays = ["0.25s","0.5s","0.75s"];
+?>
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -66,12 +109,12 @@
                     <div class="collapse navbar-collapse main-menu">
                         <div class="nav-menu-wrapper">
                             <ul class="navbar-nav mr-auto" id="menu">
-                                <li class="nav-item"><a class="nav-link" href="">Home</a>
+                                <li class="nav-item"><a class="nav-link" href="./">Home</a>
                                 <li>
                                 <li class="nav-item"><a class="nav-link" href="about-us.html">About Us</a></li>
                                 <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
-                                <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
-                                <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                                <li class="nav-item"><a class="nav-link" href="projects.php">Projects</a></li>
+                                <li class="nav-item"><a class="nav-link" href="blog.php">Blog</a></li>
                                 <!-- <li class="nav-item"><a class="nav-link" href="#">Pages</a>
                                      <ul>                                        
                                         <li class="nav-item"><a class="nav-link" href="service-single.html">Service Details</a></li>
@@ -123,7 +166,8 @@
                                         <!-- Hero Content Start -->
                                         <div class="hero-content">
                                             <div class="section-title">
-                                                <h3 class="wow fadeInUp">Welcome to CLARICENT COMPANY LIMITED<br>(Construction and Engineering Services)</h3>
+                                                <h3 class="wow fadeInUp">Welcome to CLARICENT COMPANY
+                                                    LIMITED<br>(Construction and Engineering Services)</h3>
                                                 <h1 class="text-anime-style-3" data-cursor="-opaque">Building dreams
                                                     with precision and excellence</h1>
                                                 <p class="wow fadeInUp" data-wow-delay="0.25s">we specialize in turning
@@ -162,7 +206,8 @@
                                         <!-- Hero Content Start -->
                                         <div class="hero-content">
                                             <div class="section-title">
-                                                <h3 class="wow fadeInUp">Welcome to CLARICENT COMPANY LIMITED<br>(Construction and Engineering Services)</h3>
+                                                <h3 class="wow fadeInUp">Welcome to CLARICENT COMPANY
+                                                    LIMITED<br>(Construction and Engineering Services)</h3>
                                                 <h1 class="text-anime-style-3" data-cursor="-opaque">Building dreams
                                                     with precision and excellence</h1>
                                                 <p class="wow fadeInUp" data-wow-delay="0.25s">we specialize in turning
@@ -545,7 +590,7 @@
     <!-- Why Choose Us Section End -->
 
     <!-- Our Projects Section Start -->
-    <div class="our-projects"  id="project">
+    <div class="our-projects" id="project">
         <div class="light-bg-section">
             <div class="container-fluid">
                 <div class="row section-row">
@@ -563,14 +608,24 @@
                 </div>
 
                 <div class="row">
+                    <?php if (!empty($homeProjects)): ?>
+                    <?php foreach ($homeProjects as $i => $p):
+                        $delay   = $delays[$i % count($delays)];
+                        $imgSrc  = htmlspecialchars($p["image_path"] ?: "images/placeholder.jpg", ENT_QUOTES, "UTF-8");
+                        $name    = htmlspecialchars($p["name"], ENT_QUOTES, "UTF-8");
+                        $nameLow = htmlspecialchars(strtolower($p["name"]), ENT_QUOTES, "UTF-8");
+                        $desc    = htmlspecialchars($p["description"], ENT_QUOTES, "UTF-8");
+                        $slug    = htmlspecialchars($p["slug"], ENT_QUOTES, "UTF-8");
+                        $href    = "project-detail.php?slug={$slug}";
+                    ?>
                     <div class="col-lg-3 col-md-6">
                         <!-- Project Item Start -->
-                        <div class="project-item wow fadeInUp" data-wow-delay="0.25s">
+                        <div class="project-item wow fadeInUp" data-wow-delay="<?= $delay ?>">
                             <!-- Project Image Start -->
                             <div class="project-image" data-cursor-text="View">
-                                <a href="#">
+                                <a href="<?= $href ?>">
                                     <figure>
-                                        <img src="images/claricent-bg-12.jpeg" alt="">
+                                        <img src="<?= $imgSrc ?>" alt="<?= $name ?>">
                                     </figure>
                                 </a>
                             </div>
@@ -578,139 +633,26 @@
 
                             <!-- Project Body Start -->
                             <div class="project-body">
-                                <!-- Project Body Title Start -->
                                 <div class="project-body-title">
-                                    <h3>Sekondi-Takoradi</h3>
+                                    <h3><?= $nameLow ?></h3>
                                 </div>
-                                <!-- Project Body Title End -->
-
-                                <!-- Project Content Start -->
                                 <div class="project-content">
-                                    <p>Our post-construction services gives you peace of mind knowing that we are still
-                                        here for you even after.</p>
-                                    <!-- <div class="project-content-footer">
-                                        <a href="#" class="readmore-btn">view more</a>
-                                    </div> -->
+                                    <p><?= $desc ?></p>
+                                    <div class="project-content-footer">
+                                        <a href="<?= $href ?>" class="readmore-btn">view more</a>
+                                    </div>
                                 </div>
-                                <!-- Project Content End -->
                             </div>
                             <!-- Project Body End -->
                         </div>
                         <!-- Project Item End -->
                     </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <!-- Project Item Start -->
-                        <div class="project-item wow fadeInUp" data-wow-delay="0.5s">
-                            <!-- Project Image Start -->
-                            <div class="project-image" data-cursor-text="View">
-                                <a href="#">
-                                    <figure>
-                                        <img src="images/claricent-bg-11.jpeg" alt="">
-                                    </figure>
-                                </a>
-                            </div>
-
-                            <!-- Project Image End -->
-
-                            <!-- Project Body Start -->
-                            <div class="project-body">
-                                <!-- Project Body Title Start -->
-                                <div class="project-body-title">
-                                    <h3>Accra (Gbawe)</h3>
-                                </div>
-                                <!-- Project Body Title End -->
-
-                                <!-- Project Content Start -->
-                                <div class="project-content">
-                                    <p>Our post-construction services gives you peace of mind knowing that we are still
-                                        here for you even after.</p>
-                                    <!-- <div class="project-content-footer">
-                                        <a href="#" class="readmore-btn">view more</a>
-                                    </div> -->
-                                </div>
-                                <!-- Project Content End -->
-                            </div>
-                            <!-- Project Body End -->
-                        </div>
-                        <!-- Project Item End -->
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <!-- Project Item Start -->
-                        <div class="project-item wow fadeInUp" data-wow-delay="0.75s">
-                            <!-- Project Image Start -->
-                            <div class="project-image" data-cursor-text="View">
-                                <a href="#">
-                                    <figure>
-                                        <img src="images/claricent-bg-8.jpeg" alt="">
-                                    </figure>
-                                </a>
-                            </div>
-                            <!-- Project Image End -->
-
-                            <!-- Project Body Start -->
-                            <div class="project-body">
-                                <!-- Project Body Title Start -->
-                                <div class="project-body-title">
-                                    <h3>Esiama Market</h3>
-                                </div>
-                                <!-- Project Body Title End -->
-
-                                <!-- Project Content Start -->
-                                <div class="project-content">
-                                    <p>Our post-construction services gives you peace of mind knowing that we are still
-                                        here for you even after.</p>
-                                    <!-- <div class="project-content-footer">
-                                        <a href="#" class="readmore-btn">view more</a>
-                                    </div> -->
-                                </div>
-                                <!-- Project Content End -->
-                            </div>
-                            <!-- Project Body End -->
-                        </div>
-                        <!-- Project Item End -->
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <!-- Project Item Start -->
-                        <div class="project-item wow fadeInUp" data-wow-delay="1s">
-                            <!-- Project Image Start -->
-                            <div class="project-image" data-cursor-text="View">
-                                <a href="#">
-                                    <figure>
-                                        <img src="images/claricent-bg-2.jpeg" alt="">
-                                    </figure>
-                                </a>
-                            </div>
-                            <!-- Project Image End -->
-
-                            <!-- Project Body Start -->
-                            <div class="project-body">
-                                <!-- Project Body Title Start -->
-                                <div class="project-body-title">
-                                    <h3>Cape Coast</h3>
-                                </div>
-                                <!-- Project Body Title End -->
-
-                                <!-- Project Content Start -->
-                                <div class="project-content">
-                                    <p>Our post-construction services gives you peace of mind knowing that we are still
-                                        here for you even after.</p>
-                                    <!-- <div class="project-content-footer">
-                                        <a href="#" class="readmore-btn">view more</a>
-                                    </div> -->
-                                </div>
-                                <!-- Project Content End -->
-                            </div>
-                            <!-- Project Body End -->
-                        </div>
-                        <!-- Project Item End -->
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
 
                     <!-- Services Footer Btn Start -->
                     <div class="project-footer-btn wow fadeInUp" data-wow-delay="1.25s">
-                        <a href="projects.html" class="btn-default">view all projects</a>
+                        <a href="projects.php" class="btn-default">view all projects</a>
                     </div>
                     <!-- Services Footer Btn End -->
                 </div>
@@ -786,21 +728,23 @@
                                                 <i class="fa-solid fa-star"></i>
                                             </div>
                                             <div class="testimonial-content">
-                                                <p>We specialize in a wide range of construction services, including
-                                                    residential, commercial, and industrial projects. From initial
-                                                    design to final inspection, we work closely with our clients to
-                                                    understand their unique needs and vision.</p>
+                                                <p>Thank you for sharing your proposal. As a businesswoman, my priority
+                                                    is securing solutions that balance quality with cost-effectiveness.
+                                                    I am particularly interested in how Claricent Company Ltd ensures
+                                                    value for money in its construction and engineering services. Please
+                                                    provide a clear breakdown of your pricing structure alongside the
+                                                    measurable benefits I can expect, so I can assess the return on
+                                                    investment before moving forward.</p>
                                             </div>
                                         </div>
                                         <div class="testimonial-body">
                                             <div class="author-image">
                                                 <figure class="image-anime">
-                                                    <img src="images/claricent-bg-6.jpeg" alt="">
+                                                    <img src="images/author-1.jpg" alt="">
                                                 </figure>
                                             </div>
                                             <div class="author-content">
-                                                <h3>johan duo</h3>
-                                                <p>project manager</p>
+                                                <h3>Mad. Natalia</h3>
                                             </div>
                                         </div>
                                     </div>
@@ -910,6 +854,93 @@
                                             </div>
                                             <div class="author-content">
                                                 <h3>Mr. Kwamena Agyei</h3>
+                                                <!-- <p>structural engineer</p> -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Testimonial Slide End -->
+
+                                <!-- Testimonial Slide Start -->
+                                <div class="swiper-slide">
+                                    <div class="testimonial-item">
+                                        <div class="testimonial-header">
+                                            <div class="testimonial-rating">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <div class="testimonial-content">
+                                                <p>I am truly impressed by the exceptional construction services
+                                                    delivered by Claricent Company Ltd. From the very beginning, their
+                                                    team demonstrated remarkable professionalism, technical expertise,
+                                                    and an unwavering commitment to quality. Every stage of the project
+                                                    was handled with precision - planning, execution, and finishing were
+                                                    all seamlessly coordinated, resulting in a final outcome that
+                                                    exceeded expectations.
+
+                                                    What stood out most was their attention to detail and ability to
+                                                    combine efficiency with craftsmanship. The project was completed on
+                                                    schedule without compromising on safety or standards, and their
+                                                    transparent communication kept me informed throughout the process.
+                                                    Claricent Company Ltd not only delivered a structure of outstanding
+                                                    durability and design but also provided a customer experience marked
+                                                    by reliability, integrity, and excellence.
+
+                                                    I confidently recommend Claricent Company Ltd to anyone seeking
+                                                    construction services of the highest caliber. They are a company
+                                                    that truly sets the benchmark for professionalism and quality in the
+                                                    industry.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="testimonial-body">
+                                            <div class="author-image">
+                                                <figure class="image-anime">
+                                                    <img src="images/author-4.jpg" alt="">
+                                                </figure>
+                                            </div>
+                                            <div class="author-content">
+                                                <h3>Prof. Zugle</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Testimonial Slide End -->
+
+                                <!-- Testimonial Slide Start -->
+                                <div class="swiper-slide">
+                                    <div class="testimonial-item">
+                                        <div class="testimonial-header">
+                                            <div class="testimonial-rating">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <div class="testimonial-content">
+                                                <p>We extend our sincere appreciation to Claricent Company Ltd for
+                                                    delivering an outstanding structural integrity assessment report.
+                                                    The depth of analysis, clarity of presentation, and precision of
+                                                    recommendations reflect a high level of technical expertise and
+                                                    professionalism. Your team’s meticulous approach has provided us
+                                                    with invaluable insights that will guide our decision-making with
+                                                    confidence. We commend Claricent for setting such a strong benchmark
+                                                    in quality reporting and look forward to continued collaboration on
+                                                    future projects.
+                                            </div>
+                                        </div>
+                                        <div class="testimonial-body">
+                                            <div class="author-image">
+                                                <figure class="image-anime">
+                                                    <img src="images/author-4.jpg" alt="">
+                                                </figure>
+                                            </div>
+                                            <div class="author-content">
+                                                <h3>The Trinity Methodist Church</h3>
                                                 <!-- <p>structural engineer</p> -->
                                             </div>
                                         </div>
@@ -1115,108 +1146,48 @@
             </div>
 
             <div class="row">
+                <?php if (empty($homePosts)): ?>
+                <div class="col-12 text-center" style="padding:40px 0;color:#667282;">
+                    <p>No blog posts yet. Add your first post in the admin panel.</p>
+                </div>
+                <?php else: ?>
+                <?php foreach ($homePosts as $i => $p):
+                    $bDelay = $blogDelays[$i % count($blogDelays)];
+                    $bImg   = htmlspecialchars($p["image_path"] ?: "images/post-placeholder.jpg", ENT_QUOTES, "UTF-8");
+                    $bTitle = htmlspecialchars($p["title"], ENT_QUOTES, "UTF-8");
+                    $bSlug  = htmlspecialchars($p["slug"],  ENT_QUOTES, "UTF-8");
+                    $bHref  = "blog-detail.php?slug={$bSlug}";
+                ?>
                 <div class="col-lg-4 col-md-6">
                     <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp" data-wow-delay="0.25s">
-                        <!-- Post Featured Image Start-->
+                    <div class="blog-item wow fadeInUp" data-wow-delay="<?= $bDelay ?>">
                         <div class="post-featured-image" data-cursor-text="View">
                             <figure>
-                                <a href="#" class="image-anime">
-                                    <img src="https://html.awaikenthemes.com/builtup/images/post-1.jpg" alt="">
+                                <a href="<?= $bHref ?>" class="image-anime">
+                                    <img src="<?= $bImg ?>" alt="<?= $bTitle ?>">
                                 </a>
                             </figure>
                         </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
                         <div class="post-item-content">
-                            <!-- post Item Body Start -->
                             <div class="post-item-body">
-                                <h2><a href="#">10 Essential Tips for Choosing the Right Builder</a></h2>
+                                <h2><a href="<?= $bHref ?>"><?= $bTitle ?></a></h2>
                             </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
                             <div class="post-item-footer">
-                                <a href="#" class="readmore-btn">read more</a>
+                                <a href="<?= $bHref ?>" class="readmore-btn">read more</a>
                             </div>
-                            <!-- Post Item Footer End-->
                         </div>
-                        <!-- post Item Content End -->
                     </div>
                     <!-- Blog Item End -->
                 </div>
-
-                <div class="col-lg-4 col-md-6">
-                    <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp" data-wow-delay="0.5s">
-                        <!-- Post Featured Image Start-->
-                        <div class="post-featured-image" data-cursor-text="View">
-                            <figure>
-                                <a href="#" class="image-anime">
-                                    <img src="https://html.awaikenthemes.com/builtup/images/post-2.jpg" alt="">
-                                </a>
-                            </figure>
-                        </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
-                        <div class="post-item-content">
-                            <!-- post Item Body Start -->
-                            <div class="post-item-body">
-                                <h2><a href="#">The Future of Sustainable Construction Innovations</a></h2>
-                            </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
-                            <div class="post-item-footer">
-                                <a href="#" class="readmore-btn">read more</a>
-                            </div>
-                            <!-- Post Item Footer End-->
-                        </div>
-                        <!-- post Item Content End -->
-                    </div>
-                    <!-- Blog Item End -->
-                </div>
-
-                <div class="col-lg-4 col-md-6">
-                    <!-- Blog Item Start -->
-                    <div class="blog-item wow fadeInUp" data-wow-delay="0.75s">
-                        <!-- Post Featured Image Start-->
-                        <div class="post-featured-image" data-cursor-text="View">
-                            <figure>
-                                <a href="#" class="image-anime">
-                                    <img src="https://html.awaikenthemes.com/builtup/images/post-3.jpg" alt="">
-                                </a>
-                            </figure>
-                        </div>
-                        <!-- Post Featured Image End -->
-
-                        <!-- post Item Content Start -->
-                        <div class="post-item-content">
-                            <!-- post Item Body Start -->
-                            <div class="post-item-body">
-                                <h2><a href="#">How to Design Your Dream Home: A Step-by-Step Guide</a></h2>
-                            </div>
-                            <!-- Post Item Body End-->
-
-                            <!-- Post Item Footer Start-->
-                            <div class="post-item-footer">
-                                <a href="#" class="readmore-btn">read more</a>
-                            </div>
-                            <!-- Post Item Footer End-->
-                        </div>
-                        <!-- post Item Content End -->
-                    </div>
-                    <!-- Blog Item End -->
-                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
     <!-- Our Blog End -->
 
     <!-- Contact Us Section Start -->
-    <div class="contact-us"  id="contact">
+    <div class="contact-us" id="contact">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-4 col-md-5">
@@ -1374,8 +1345,8 @@
                         <ul>
                             <li><a href="about-us.html">about us</a></li>
                             <li><a href="services.html">services</a></li>
-                            <li><a href="projects.html">projects</a></li>
-                            <li><a href="blog.html">blog</a></li>
+                            <li><a href="projects.php">projects</a></li>
+                            <li><a href="blog.php">blog</a></li>
                             <li><a href="contact.html">contact us</a></li>
                         </ul>
                     </div>
@@ -1446,7 +1417,7 @@
                                 <!-- <li><a href="#"><i class="fa-brands fa-github"></i></a></li> -->
                                 <li><a href="https://www.linkedin.com/in/jeriscot-claricent-7090773a9/"><i
                                             class="fa-brands fa-linkedin-in"></i></a></li>
-                                <li><a href="https://www.tiktok.com/@claricent.company?_r=1&_t=ZS-946Zm9zXxrh"><i 
+                                <li><a href="https://www.tiktok.com/@claricent.company?_r=1&_t=ZS-946Zm9zXxrh"><i
                                             class="fa-brands fa-tiktok"></i></a></li>
                             </ul>
                         </div>
@@ -1460,7 +1431,7 @@
     <!-- Footer End -->
 
     <!-- Jquery Library File -->
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

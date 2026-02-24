@@ -21,7 +21,6 @@
     --text-primary:  #2C3E50;
     --text-secondary:#667282;
     --text-muted:    #9aaabb;
-    --text-white:   #ffffff;
 
     /* ── Sidebar (on dark navy bg) ── */
     --sidebar-text:        rgba(255,255,255,0.85);
@@ -494,7 +493,7 @@ textarea {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    color: var(--text-white);
+    color: var(--text-primary);
     font-family: inherit; font-size: 14px;
     padding: 10px 14px;
     outline: none;
@@ -506,10 +505,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 ::placeholder { color: var(--text-muted); }
-select option { 
-    background: var(--bg-card);
-    color: var(--text-primary); 
-}
+select option { background: var(--bg-card); }
 
 .pw-wrap { position: relative; }
 .pw-wrap input { padding-right: 44px; }
@@ -798,3 +794,14 @@ select option {
 /* ── Blog status badges ── */
 .status-published { background: var(--success-dim); color: var(--success); }
 .status-draft     { background: var(--bg-hover);    color: var(--text-muted); }
+
+/* ── Diagnose section headers ── */
+.diag-section-head {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 14px 0 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+.diag-section-head:first-child { margin-top: 0; }

@@ -1,3 +1,34 @@
+<?php
+/* ─── DB CONFIG — match your admin/api.php ─────────────── */
+define("DB_HOST",    "localhost");
+define("DB_NAME",    "claricen_db");   // ← your DB name
+define("DB_USER",    "root");          // ← your DB user
+define("DB_PASS",    "");             // ← your DB password
+define("DB_CHARSET", "utf8mb4");
+
+function db(): PDO {
+    static $pdo = null;
+    if ($pdo === null) {
+        $pdo = new PDO(
+            "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=".DB_CHARSET,
+            DB_USER, DB_PASS,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+        );
+    }
+    return $pdo;
+}
+
+try {
+    $projects = db()->query(
+        "SELECT * FROM projects ORDER BY sort_order ASC, created_at DESC"
+    )->fetchAll();
+} catch (Exception $e) {
+    $projects = [];
+}
+
+$delays = ["0.25s","0.5s","0.75s","1s","1.25s","1.5s"];
+?>
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -57,7 +88,7 @@
             <nav class="navbar navbar-expand-lg">
                 <div class="container-fluid">
                     <!-- Logo Start -->
-                    <a class="navbar-brand" href="./">
+                    <a class="navbar-brand" href="index.php">
                         <img src="images/CLARICENT_COMPANY_LIMITED_FULL_LOGO.png" alt="Logo">
                     </a>
                     <!-- Logo End -->
@@ -66,10 +97,10 @@
                     <div class="collapse navbar-collapse main-menu">
                         <div class="nav-menu-wrapper">
                             <ul class="navbar-nav mr-auto" id="menu">
-                                <li class="nav-item"><a class="nav-link" href="./">Home</a><li>
+                                <li class="nav-item"><a class="nav-link" href="index.php">Home</a><li>
                                 <li class="nav-item"><a class="nav-link" href="about-us.html">About Us</a></li>
                                 <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
-                                <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                                <li class="nav-item"><a class="nav-link" href="projects.php">Projects</a></li>
                                 <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
                                <!-- <li class="nav-item"><a class="nav-link" href="#">Pages</a>
                                      <ul>                                                                                
@@ -111,7 +142,7 @@
 						<h1 class="text-anime-style-3" data-cursor="-opaque">Our Projects</h1>
 						<nav class="wow fadeInUp">
 							<ol class="breadcrumb">
-								<li class="breadcrumb-item"><a href="./">home</a></li>
+								<li class="breadcrumb-item"><a href="index.php">home</a></li>
 								<li class="breadcrumb-item active" aria-current="page">projects</li>
 							</ol>
 						</nav>
@@ -127,15 +158,29 @@
     <div class="page-project">
         <div class="container">
             <div class="row">
-                <!-- ADMIN:PROJECTS:START -->
+                <?php if (empty($projects)): ?>
+                <div class="col-12 text-center" style="padding:60px 0;color:#667282;">
+                    <i class="fa fa-folder-open" style="font-size:40px;margin-bottom:16px;display:block;opacity:0.4;"></i>
+                    <p>No projects yet. Add your first project in the admin panel.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($projects as $i => $p):
+                    $delay   = $delays[$i % count($delays)];
+                    $imgSrc  = htmlspecialchars($p["image_path"] ?: "images/placeholder.jpg", ENT_QUOTES, "UTF-8");
+                    $name    = htmlspecialchars($p["name"], ENT_QUOTES, "UTF-8");
+                    $nameLow = htmlspecialchars(strtolower($p["name"]), ENT_QUOTES, "UTF-8");
+                    $desc    = htmlspecialchars($p["description"], ENT_QUOTES, "UTF-8");
+                    $slug    = htmlspecialchars($p["slug"], ENT_QUOTES, "UTF-8");
+                    $href    = "project-detail.php?slug={$slug}";
+                ?>
                 <div class="col-lg-4 col-md-6">
                     <!-- Project Item Start -->
-                    <div class="project-item wow fadeInUp" data-wow-delay="0.25s">
+                    <div class="project-item wow fadeInUp" data-wow-delay="<?= $delay ?>">
                         <!-- Project Image Start -->
                         <div class="project-image" data-cursor-text="View">
-                            <a href="project-detail.php?slug=basit">
+                            <a href="<?= $href ?>">
                                 <figure>
-                                    <img src="images/basit.jpeg" alt="basit">
+                                    <img src="<?= $imgSrc ?>" alt="<?= $name ?>">
                                 </figure>
                             </a>
                         </div>
@@ -143,60 +188,22 @@
 
                         <!-- Project Body Start -->
                         <div class="project-body">
-                            <!-- Project Body Title Start -->
                             <div class="project-body-title">
-                                <h3>basit</h3>
+                                <h3><?= $nameLow ?></h3>
                             </div>
-                            <!-- Project Body Title End -->
-
-                            <!-- Project Content Start -->
                             <div class="project-content">
-                                <p>hj,zdmshv,nkerm/o</p>
+                                <p><?= $desc ?></p>
                                 <div class="project-content-footer">
-                                    <a href="project-detail.php?slug=basit" class="readmore-btn">view more</a>
+                                    <a href="<?= $href ?>" class="readmore-btn">view more</a>
                                 </div>
                             </div>
-                            <!-- Project Content End -->
                         </div>
                         <!-- Project Body End -->
                     </div>
                     <!-- Project Item End -->
                 </div>
-                <div class="col-lg-4 col-md-6">
-                    <!-- Project Item Start -->
-                    <div class="project-item wow fadeInUp" data-wow-delay="0.5s">
-                        <!-- Project Image Start -->
-                        <div class="project-image" data-cursor-text="View">
-                            <a href="project-detail.php?slug=another-one">
-                                <figure>
-                                    <img src="images/another-one.jpeg" alt="another one">
-                                </figure>
-                            </a>
-                        </div>
-                        <!-- Project Image End -->
-
-                        <!-- Project Body Start -->
-                        <div class="project-body">
-                            <!-- Project Body Title Start -->
-                            <div class="project-body-title">
-                                <h3>another one</h3>
-                            </div>
-                            <!-- Project Body Title End -->
-
-                            <!-- Project Content Start -->
-                            <div class="project-content">
-                                <p>fdhrdgtyjkhulnij</p>
-                                <div class="project-content-footer">
-                                    <a href="project-detail.php?slug=another-one" class="readmore-btn">view more</a>
-                                </div>
-                            </div>
-                            <!-- Project Content End -->
-                        </div>
-                        <!-- Project Body End -->
-                    </div>
-                    <!-- Project Item End -->
-                </div>
-                <!-- ADMIN:PROJECTS:END -->
+                <?php endforeach; ?>
+            <?php endif; ?>
             </div>
         </div>
     </div>
@@ -361,7 +368,7 @@
                         <ul>
                             <li><a href="about-us.html">about us</a></li>
                             <li><a href="services.html">services</a></li>
-                            <li><a href="projects.html">projects</a></li>
+                            <li><a href="projects.php">projects</a></li>
                             <li><a href="blog.html">blog</a></li>
                             <li><a href="contact.html">contact us</a></li>
                         </ul>
@@ -447,7 +454,7 @@
     <!-- Footer End -->
 
     <!-- Jquery Library File -->
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
